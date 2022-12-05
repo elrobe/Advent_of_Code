@@ -1,0 +1,4 @@
+# Clojure files
+.calva/
+.clj-kondo/
+.lsp/
