@@ -10,6 +10,11 @@
 // Part 1 -
 // Find the item that appears in both compartments and sum up
 // all of the priority values for the duplicative item in each sack.
+//
+// Part 2 -
+// Each elf is in a group of three. Each group of 3 should have
+// one item that resides in each of their bags. Find the item and
+// sum the priority of these items for each group.
 
 // To run:
 // - Requires node.js
@@ -18,6 +23,10 @@
 
 const fs = require('fs');
 
+// For Part 1
+// Create a map of one compartment, then iterate over the
+// second compartment to see if the key exists in the map.
+// Hooray of O(1) lookup
 const findDuplicate = (a, b) => {
     const map = {};
     for (let i = 0; i < a.length; i++) {
@@ -29,10 +38,38 @@ const findDuplicate = (a, b) => {
     return -1; // Unexpected, but expect it anyway
 }
 
-const checkSacks = (sackAry) => {
+// For Part 2
+// Same as findDuplicate, but tries to find the one item that
+// resides in three entire rucksacks instead of two compartments.
+const findTriplicate = (a, b, c) => {
+    const mapA = {};
+    const mapB = {};
+    for (let i = 0; i < a.length; i++) {
+        mapA[a[i]] = 1;
+    }
+    for (let i = 0; i < b.length; i++) {
+        mapB[b[i]] = 1;
+    }
+    for (let i = 0; i < c.length; i++) {
+        if (mapA[c[i]] === 1 && mapB[c[i]]) return c[i];
+    }
+    return -1; // Unexpected, but expect it anyway
+}
+
+// Reusable for both parts
+const getPriority = (val) => {
+    const aVal = 'a'.charCodeAt(0);
+    const AVal = 'A'.charCodeAt(0);
+    const curVal = val.charCodeAt(0);
+    if (curVal < aVal) { // Must be uppercase
+        return curVal - AVal + 27;
+    } else {
+        return curVal - aVal + 1;
+    }
+}
+
+const checkSacks_part1 = (sackAry) => {
     let prioritySum = 0;
-    const a_val = 'a'.charCodeAt(0);
-    const A_val = 'A'.charCodeAt(0);
     // For each rucksack...
     for (let i = 0; i < sackAry.length; i++) {
         // Divide each sack into the two compartments
@@ -43,21 +80,36 @@ const checkSacks = (sackAry) => {
         const dup = findDuplicate(comp1, comp2);
         if (dup === -1) throw ("Unexpected value found in rucksack: " + sack)
         // Get the priority value
-        if (dup > 'Z') { // Must be capital
-            priority = dup.charCodeAt(0) - a_val + 1;
-        } else {
-            priority = dup.charCodeAt(0) - A_val + 27;
-        }
-        prioritySum += priority;
+        prioritySum += getPriority(dup);
     }
 
     // Final output
-    console.log(prioritySum);
+    console.log("Part 1: " + prioritySum);
+}
+
+const checkSacks_part2 = (sackAry) => {
+    let prioritySum = 0;
+    // For each group of 3 rucksacks...
+    for (let i = 0; i < sackAry.length; i+=3) {
+        // Divide each sack into the two compartments
+        const sack1 = sackAry[i];
+        const sack2 = sackAry[i+1];
+        const sack3 = sackAry[i+2];
+        // Now find the duplicative letter in both
+        const dup = findTriplicate(sack1, sack2, sack3);
+        if (dup === -1) throw ("Unexpected value found in rucksack: " + sack)
+        // Get the priority value
+        prioritySum += getPriority(dup);
+    }
+
+    // Final output
+    console.log("Part 2: " + prioritySum);
 }
 
 fs.readFile("input.txt", (err, data) => {
     if (err) throw err; // Unexpected, but expect it anyway
     
     ruckSacks = data.toString().split("\n");
-    checkSacks(ruckSacks);
+    checkSacks_part1(ruckSacks);
+    checkSacks_part2(ruckSacks);
 });
