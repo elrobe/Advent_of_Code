@@ -7,14 +7,25 @@
 // line) is all of the movement commands.
 //
 // Part 1 -
-// Return what the top of each stack is after all the moves.
-
-
+// Return what the top of each stack is after all the moves. The
+// crates each get moved over one-by-one. What is the top crate
+// of each stack?
+//
+// Part 2 -
+// Now the crates are moved together to different stacks, preserving the order.
+// What is the top crate of each stack?
 
 // To run:
 // - node solution.js
 
 const fs = require('fs');
+
+// Debugging function
+const printStacks = (stacks) => {
+  for (let i = 0; i < stacks.length; i++) {
+    console.log((i+1) + ": " + stacks[i].join("-"));
+  }
+}
 
 const parseStacks = (config) => {
   // We're going to go from the bottom up since the last number of the
@@ -58,7 +69,8 @@ const parseMove = (move) => {
   ];
 }
 
-const parseMoves = (stacks, moves) => {
+// Part 1 stacking code!
+const parseMoves_part1 = (stacks, moves) => {
   moves.forEach((move) => {
     const [num, source, target] = parseMove(move);
     for (let x = 0; x < num; x++) {
@@ -67,6 +79,25 @@ const parseMoves = (stacks, moves) => {
         stacks[target].push(crate);
       }
     }
+  })
+}
+
+// Part 2 stacking code! Mostly the same...
+const parseMoves_part2 = (stacks, moves) => {
+  moves.forEach((move) => {
+    const [num, source, target] = parseMove(move);
+    // The catch here is that now I have to move them all in order,
+    // so I'm going to put them into a temporary array
+    const tempStack = [];
+    for (let x = 0; x < num; x++) {
+      const crate = stacks[source].pop();
+      if (crate) {
+        tempStack.push(crate);
+      }
+    }
+    tempStack.reverse(); // So we pull from the "bottom"
+    // Now move them from the tempStack onto the actual target
+    tempStack.forEach((crate) => stacks[target].push(crate));
   })
 }
 
@@ -93,11 +124,16 @@ fs.readFile("input.txt", (err, data) => {
   }
   
   // Now we need to construct the 2D array of configuration
-  const stacks = parseStacks(config);
+  const stacks1 = parseStacks(config);
+  // Normally I'd create a copy than re-parse, but I'm not coding for a client,
+  // so I'm taking the easy way out. Sorry if this makes you cringe!
+  const stacks2 = parseStacks(config);
 
-  // We have our stacks, so apply the moves!
-  parseMoves(stacks, moves);
+  // Part 1 output
+  parseMoves_part1(stacks1, moves);
+  console.log(stacks1.map((stack) => stack[stack.length - 1]).join(""));
 
-  // Part 1 output - print the top of each stack
-  console.log(stacks.map((stack) => stack[stack.length - 1]).join(""));
+  // Part 2 output
+  parseMoves_part2(stacks2, moves);
+  console.log(stacks2.map((stack) => stack[stack.length - 1]).join(""));
 });
