@@ -1,7 +1,19 @@
 (ns solution
   (:require [clojure.string :as str]))
 
-;; How to run:
+;; Advent of Code 2022 - Day 1
+;; Calorie Counting
+;;
+;; The input is a list of elves and how many calories
+;; they're carrying.
+;;
+;; Part 1 -
+;; Find the Elf carrying the most Calories. How many total Calories is that Elf carrying?
+;;
+;; Part 2 -
+;; Find the top three elves carrying the most Calories.
+
+;; To run:
 ;; - Start a repl (I used 'lein repl')
 ;; - Connect Calva to the running repl
 ;; - Run (main) in the repl
@@ -22,8 +34,10 @@
         ;; We have out data, now process it
         sums  (reduce process-data [0] data)
         sort  (sort > sums)] ;; Sort in descending order
-    ;; Return the sum of the max 3 calorie counts
-    (reduce #(+ %1 %2) 0 (take 3 sort))))
+    ;; Part 1: Return the highest calorie count
+    (println "Part 1:" (first sort))
+    ;; Part 2: Return the sum of the max 3 calorie counts 
+    (println "Part 2:" (reduce #(+ %1 %2) 0 (take 3 sort)))))
 
 (comment
   (main))
