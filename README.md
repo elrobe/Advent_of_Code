@@ -18,3 +18,5 @@ Each solution file contains two main parts:
 3. [Rucksack Reorganization](./2022/3/) - Node.js
 4. [Camp Cleanup](./2022/4/) - Java
 5. [Supply Stacks](./2022/5/) - Node.js
+6. [Tuning Trouble](./2022/6/) - M
+7. [No Space Left On Device](./2022/7/) - Clojure
