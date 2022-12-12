@@ -13,6 +13,13 @@
 #
 # Part 1 -
 # Find the number of visible trees.
+#
+# Part 2 -
+# The elves want to build their tree house in a tree with
+# the best view. The view is determines by the number of
+# trees that can be seen in each direction, multiplied together.
+# So if you can see 1N, 2S, 3E, 4W trees, then the scenery
+# score is 1 * 2 * 3 * 4. What's the max scenery score?
 
 # To run:
 # - Make sure you have python3 installed
@@ -63,6 +70,7 @@ def checkTree(trees, row, col):
   # Just return visible at this point from the last truthy check
   return visible
 
+# Part 1:
 # Iterate over each row and column and count the trees
 # visible from the edges of the array.
 def countVisible(trees):
@@ -74,6 +82,61 @@ def countVisible(trees):
         count = count + 1
   return count
 
+# Keeping in mind we can always at least one tree in each direction,
+# given the current tree position, count the total number of visible
+# trees in each direction and calculate the score: N * S * E * W
+def getScore(trees, row, col):
+  # Check for an edge tree (always have a score of 0)
+  if row == 0: return 0
+  if row == len(trees) - 1: return 0
+  if col == 0: return 0
+  if col == len(trees[row]) - 1: return 0
+
+  height = trees[row][col]
+  # Check the trees to the East
+  east = 0
+  x = col + 1
+  while x < len(trees[row]):
+    east = east + 1
+    if height <= trees[row][x]: break
+    x = x + 1
+  # Check the trees to the West
+  west = 0
+  x = col - 1
+  while x >= 0:
+    west = west + 1
+    if height <= trees[row][x]: break
+    x = x - 1
+  # Check the trees to the North
+  north = 0
+  x = row - 1
+  while x >= 0:
+    north = north + 1
+    if height <= trees[x][col]: break
+    x = x - 1
+  # Check the trees to the South
+  south = 0
+  x = row + 1
+  while x < len(trees):
+    south = south + 1
+    if height <= trees[x][col]: break
+    x = x + 1
+  
+  return north * south * east * west
+
+# Part 2:
+# Iterate over each row and column and calculate the scenery
+# score for each tree. Return the max scenery score.
+def maxSceneryScore(trees):
+  bestScore = 0
+  for row in range(0, len(trees)):
+    treeRow = trees[row]
+    for col in range(0, len(treeRow)):
+      curScore = getScore(trees, row, col)
+      if curScore > bestScore: bestScore = curScore
+  return bestScore
+
+
 trees = readInput()
-count = countVisible(trees)
-print("Part 1: " + str(count))
+print("Part 1: " + str(countVisible(trees)))
+print("Part 2: " + str(maxSceneryScore(trees)))
