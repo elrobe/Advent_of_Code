@@ -20,3 +20,4 @@ Each solution file contains two main parts:
 5. [Supply Stacks](./2022/5/) - Node.js
 6. [Tuning Trouble](./2022/6/) - M
 7. [No Space Left On Device](./2022/7/) - Clojure
+8. [Treetop Tree House](./2022/8/) - Python
