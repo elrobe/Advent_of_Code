@@ -22,3 +22,4 @@ Each solution file contains two main parts:
 7. [No Space Left On Device](./2022/7/) - Clojure
 8. [Treetop Tree House](./2022/8/) - Python
 9. [Rope Bridge](./2022/9/) - C#
+10. [Cathode-Ray Tube](./2022/10/) - C

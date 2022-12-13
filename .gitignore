@@ -5,3 +5,6 @@
 
 # C# output
 *.exe
+
+# C output
+*.out
