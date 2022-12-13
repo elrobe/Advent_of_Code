@@ -2,3 +2,6 @@
 .calva/
 .clj-kondo/
 .lsp/
+
+# C# output
+*.exe

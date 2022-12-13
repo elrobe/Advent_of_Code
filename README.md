@@ -21,3 +21,4 @@ Each solution file contains two main parts:
 6. [Tuning Trouble](./2022/6/) - M
 7. [No Space Left On Device](./2022/7/) - Clojure
 8. [Treetop Tree House](./2022/8/) - Python
+9. [Rope Bridge](./2022/9/) - C#
