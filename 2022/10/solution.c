@@ -12,6 +12,14 @@
 // Part 1 -
 // Given the commands, return the sum of the X register at the
 // devices clock cycles: 20, 60, 100, 140, 180, and 220.
+//
+// Part 2 -
+// The device has a screen that's got 6 rows of 40 pixels. The current
+// value in the X register denotes the middle position of a 3-pixel sprite
+// to draw. At the beginning of each clock cycle, a pixel is drawn, either
+// a "#" if the pixel position is within the current X register sprite
+// position, or a "." otherwise.
+// Using the input, what 8 capital letters appear on the screen?
 
 // To run:
 // - Compile with 'gcc solution.c'
@@ -21,8 +29,25 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Part 2 global variable...
+char** screen;
+
 void increment_cycle(int* cycle, int* x, int* sum) {
+  // ------ Start of cycle (if no-op)
+  // Part 2
+  int sprite_pos = *x;
+  int row = *cycle / 40; // Int-division for the CRT row
+  int col = *cycle % 40; // Modulo for the CRT column
+  int diff = sprite_pos - col;
+  if (diff < 0) { diff = diff * -1; }
+  if (diff <= 1) {
+    screen[row][col] = '#';
+  }
+
   *cycle = *cycle + 1;
+  // ------ End of cycle (if addx)
+
+  // Part 1
   int c = *cycle; // For easier writing
   if (c == 20 || c == 60 || c == 100 || c == 140 || c == 180 || c == 220) {
     *sum = *sum + (*x * *cycle);
@@ -64,6 +89,17 @@ int main() {
   *x = 1;
   *signal_sum = 0;
 
+  // Part 2 variables (note that "screen" is global for simplicity)
+  int rows = 6;
+  screen = malloc(sizeof(char*) * rows); // 6 rows
+  for (int i = 0; i < rows; i++) {
+    screen[i] = malloc(sizeof(char) * 40); // 40 pixels per row
+    // Set a default value
+    for (int j = 0; j < 40; j++) {
+      screen[i][j] = '.';
+    }
+  }
+
   line = fgetln(f, &len);
   while (!feof(f)) {
     if (line[len - 1] == '\n') {
@@ -78,6 +114,15 @@ int main() {
 
   printf("Part 1: %d\n", *signal_sum);
 
+  // Free part 2 memory (and print the output simultaneously)
+  printf("Part 2:\n");
+  for (int i = 0; i < rows; i++) {
+    printf("%s\n", screen[i]);
+    free(screen[i]);
+  }
+  free(screen);
+
+  // Free part 1 memory
   free(cycle);
   free(x);
   free(signal_sum);
