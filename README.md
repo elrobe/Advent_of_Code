@@ -23,3 +23,4 @@ Each solution file contains two main parts:
 8. [Treetop Tree House](./2022/8/) - Python
 9. [Rope Bridge](./2022/9/) - C#
 10. [Cathode-Ray Tube](./2022/10/) - C
+11. [Monkey in the Middle](./2022/11/) - Java
