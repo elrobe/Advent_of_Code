@@ -12,6 +12,13 @@
 // gives a level of monkey business.
 // What is the level of monkey business after 20 rounds of
 // inspections?
+//
+// Part 2 -
+// Now we won't divide the worry level by 3 anymore, but need
+// to find a different way to manage the increasing worry level
+// after each inspection.
+// What is the level of monkey business after 10,000 rounds of
+// inspections in this case?
 
 // To run:
 // - 'java solution.java'
@@ -19,22 +26,14 @@
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class solution {
-  // Handy wrapper error
-  public class InvalidMonkeyBusiness extends Error {
-    public InvalidMonkeyBusiness(String errorInfo) {
-      super("Invalid monkey business input:" + errorInfo);
-    }
-  }
-
   // Represents the "tuple" of the tossed item value and the monkey it gets thrown to
   public class TossedItem {
-    public int WorryValue;
+    public long WorryValue;
     public int MonkeyNumber;
-    public TossedItem(int worryValue, int monkeyNumber) {
+    public TossedItem(long worryValue, int monkeyNumber) {
       this.WorryValue = worryValue;
       this.MonkeyNumber = monkeyNumber;
     }
@@ -43,8 +42,10 @@ public class solution {
   // A class to parse the monkey input lines with a function to process
   // the items the monkey has.
   public class Monkey implements Comparable {
+    public static boolean PART_ONE = true; // We'll set this to false later
+
     private int InspectionsDone;
-    private LinkedList<Integer> Items;
+    private LinkedList<Long> Items;
     private char Operation;
     private String OperationValue;
     private int TestValue;
@@ -53,14 +54,14 @@ public class solution {
   
     public Monkey(String[] monkeyInfo) {
       this.InspectionsDone = 0;
-      this.Items = new LinkedList<Integer>();
+      this.Items = new LinkedList<Long>();
   
       // We don't care to parse the first row since it's just the monkey number.
       String itemsLine = monkeyInfo[1];
       // Strip off "Starting items: "
       String[] items = itemsLine.substring(itemsLine.indexOf(':') + 2).split(", ");
       for (int i = 0; i < items.length; i++) {
-        this.Items.add(Integer.parseInt(items[i]));
+        this.Items.add(Long.parseLong(items[i]));
       }
 
       // Now strip off "Operation: new = old"
@@ -89,7 +90,7 @@ public class solution {
      * Add an item to the end of this monkey's list of items.
      * @param worryValue Newly added item's worry value
      */
-    public void AddItem(int worryValue) {
+    public void AddItem(long worryValue) {
       this.Items.addLast(worryValue);
     }
   
@@ -113,19 +114,15 @@ public class solution {
      * @return the Monkey # that the item will be tossed to
      */
     private TossedItem DoInspection() {
-      int worryValue = 0, opValue;
+      long worryValue = 0, opValue;
       // Take the current item in the front of the items
-      try {
-        worryValue = this.Items.removeFirst();
-      } catch (NoSuchElementException e) {
-        throw new InvalidMonkeyBusiness("Tried to remove from empty list."); // Unexpected edge-case
-      }
+      worryValue = this.Items.removeFirst(); // Feel free to crash here, it would mean the upstream code is bad
 
       // Operation value is either "old" or an actual number
       if (this.OperationValue.equals("old")) {
         opValue = worryValue;
       } else {
-        opValue = Integer.parseInt(this.OperationValue);
+        opValue = Long.parseLong(this.OperationValue);
       }
 
       // Then apply the operation
@@ -135,8 +132,10 @@ public class solution {
         worryValue += opValue;
       }
 
-      // Always divide by 3 (post-inspection worry-decrease)
-      worryValue = worryValue / 3; // Making sure we do int-division
+      // Part 1 only: always divide by 3 (post-inspection worry-decrease)
+      if (PART_ONE) {
+        worryValue = worryValue / 3; // Making sure we do int-division
+      }
 
       // Now test it
       if (worryValue % this.TestValue == 0) {
@@ -169,12 +168,62 @@ public class solution {
         // Otherwise equal
         return 0;
     }
+
+    // For debugging
+    @Override
+    public String toString() {
+      String items = "";
+      for (Long i : this.Items) {
+        items += "[" + i + "]";
+      }
+      return "Monkey is holding: " + items;
+    }
+  }
+
+  /**
+   * Does the operations for part 1 or part 2.
+   * Reusable since they're mostly the same.
+   * @param monkeys Part's list of monkeys, since the references should be different.
+   * @param partOne Whether or not we're processing part 1 (true) or part 2 (false).
+   */
+  public static void DoPart(ArrayList<Monkey> monkeys, boolean partOne) {
+    Monkey.PART_ONE = partOne; // There's a more elegant way to do this, but oh well
+    int rounds = partOne ? 20 : 10000;
+
+    int modulo = 1;
+    if (!partOne) {
+      for (Monkey m : monkeys) {
+        modulo = modulo * m.TestValue;
+      }
+    }
+
+    for (int i = 0; i < rounds; i++) {
+      for (int m = 0; m < monkeys.size(); m++) {
+        TossedItem[] tossed = monkeys.get(m).InspectItems();
+        
+        for (int t = 0; t < tossed.length; t++) {
+          long worryValue = tossed[t].WorryValue;
+          if (!partOne) {
+            worryValue = worryValue % modulo;
+          }
+
+          monkeys.get(tossed[t].MonkeyNumber).AddItem(worryValue);
+        }
+      }
+    }
+    monkeys.sort(null);
+    
+    // Now output the monkey business!
+    System.out.println("Part " + (partOne ? "1" : "2") + ": " + 
+      ((long)monkeys.get(0).InspectionsDone() * 
+      (long)monkeys.get(1).InspectionsDone()));
   }
 
   // Our main method to run the code
   public static void main(String[] args) {
     solution solution = new solution(); // We need this to invoke the inner classes
-    ArrayList<Monkey> monkeys = new ArrayList<Monkey>();
+    ArrayList<Monkey> monkeys1 = new ArrayList<Monkey>();
+    ArrayList<Monkey> monkeys2 = new ArrayList<Monkey>();
     
     File f = new File("input.txt");
     Scanner s = null;
@@ -193,7 +242,8 @@ public class solution {
         while (s.hasNextLine()) {
           String line = s.nextLine();
           if (lineNum == 6) { // Could also check for "\n"
-            monkeys.add(solution.new Monkey(monkeyInfo));
+            monkeys1.add(solution.new Monkey(monkeyInfo));
+            monkeys2.add(solution.new Monkey(monkeyInfo));
             lineNum = 0;
             monkeyInfo = new String[6];
             continue; // Skip to next iteration
@@ -202,7 +252,8 @@ public class solution {
           lineNum++;
         }
         // Don't forget the last monkey!
-        monkeys.add(solution.new Monkey(monkeyInfo));
+        monkeys1.add(solution.new Monkey(monkeyInfo));
+        monkeys2.add(solution.new Monkey(monkeyInfo));
     } catch (Exception e) {
         System.err.println(e);
     } finally {
@@ -210,17 +261,8 @@ public class solution {
         if (s != null) s.close();
     }
 
-    // Part 1
-    for (int i = 0; i < 20; i++) {
-      for (int m = 0; m < monkeys.size(); m++) {
-        TossedItem[] tossed = monkeys.get(m).InspectItems();
-        for (int t = 0; t < tossed.length; t++) {
-          monkeys.get(tossed[t].MonkeyNumber).AddItem(tossed[t].WorryValue);
-        }
-      }
-    }
-    monkeys.sort(null);
-    // Now output the monkey business!
-    System.out.println("Part 1: " + (monkeys.get(0).InspectionsDone() * monkeys.get(1).InspectionsDone()));
+    // Process the monkey business
+    DoPart(monkeys1, true);
+    DoPart(monkeys2, false);
   }
 }
