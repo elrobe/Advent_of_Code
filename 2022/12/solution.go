@@ -11,6 +11,11 @@
 // Part 1 -
 // With the above constraints, what is the fewest number of climbs you have to
 // make to get from S to E in the input (where S == 'a' and E == 'z')?
+//
+// Part 2 -
+// You suspect that the elves will want to turn the area into a hiking trail,
+// so now find the shortest path to E where S could be ANY of the spaces
+// starting at elevation 'a'.
 
 // To run:
 // - Make sure you have Go installed on your machine
@@ -26,12 +31,12 @@ import (
 
 // A struct representing a mountain node in our graph.
 type Node struct {
-	row     int
-	col     int
+	row     int // For debugging
+	col     int // For debugging
 	adj     []*Node
 	value   byte
 	visited bool
-	isStart bool
+	isStart bool // Only needed for Part 1
 	isEnd   bool
 	dist    int // For Dijkstra's algorithm
 }
@@ -82,12 +87,11 @@ func Dijkstra(graph [][]*Node) {
 	for r := 0; r < len(graph); r++ {
 		for c := 0; c < len(graph[r]); c++ {
 			Q = append(Q, graph[r][c])
-			// Mark the start
-			if graph[r][c].isStart {
-				graph[r][c].dist = 0
-			}
 		}
 	}
+
+	// For part 1, there should be only one node that starts with dist=0.
+	// For part 2, there should be a bunch of nodes that start with dist=0.
 
 	var curNode *Node
 	var nextNode *Node
@@ -141,6 +145,9 @@ func main() {
 			curNode.row = row
 			curNode.col = col
 			curRow = append(curRow, curNode)
+			if curNode.isStart {
+				curNode.dist = 0 // Set for part 1
+			}
 			if curNode.isEnd {
 				endNode = curNode
 			}
@@ -172,6 +179,19 @@ func main() {
 
 	// Run Dijkstra's Algorithm
 	Dijkstra(graph)
-
 	fmt.Printf("Part 1: %d\n", endNode.dist)
+
+	// Part 2:
+	// Reset all distances, but set all of the possible starting point distances to 0
+	for r := 0; r < len(graph); r++ {
+		for c := 0; c < len(graph[r]); c++ {
+			graph[r][c].visited = false
+			graph[r][c].dist = math.MaxInt
+			if graph[r][c].value == 'a' {
+				graph[r][c].dist = 0
+			}
+		}
+	}
+	Dijkstra(graph)
+	fmt.Printf("Part 2: %d\n", endNode.dist)
 }
