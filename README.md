@@ -24,3 +24,4 @@ Each solution file contains two main parts:
 9. [Rope Bridge](./2022/9/) - C#
 10. [Cathode-Ray Tube](./2022/10/) - C
 11. [Monkey in the Middle](./2022/11/) - Java
+12. [Hill Climbing Algorithm](./2022/12/) - Go
