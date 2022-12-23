@@ -18,6 +18,12 @@
 #   to be in order.
 # - If one is an integer and the other an array, convert the integer to
 #   an array and proceed to evaluate it as an array.
+#
+# Part 2 -
+# Now we want to sort all of the messages, adding in two divider packets:
+# [[2]] and [[6]]
+# After sorting all of the packets using the rules from part 1, what is
+# the product of the indices of the two sorted divider packets?
 
 from enum import Enum
 
@@ -102,3 +108,40 @@ for i in range(0, len(pairs)):
     sum = sum + (i + 1)
 
 print("Part 1: " + str(sum))
+
+# Part 2: add the divider packets [[2]] and [[6]], sort,
+# then locate [[2]] and [[6]] and multiple their indices
+allPackets = [[[2]], [[6]]]
+for pair in pairs:
+  allPackets.append(pair[0])
+  allPackets.append(pair[1])
+
+# Bubble sort it, but hear me out:
+# The sorting algo is O(n^2) time, but we have 152 elements looking at the
+# input, thus 23,104 operations, which for a computer, is relatively trivial.
+# Granted, the comparison function is recursive, but we'll ignore that.
+for i in range(len(allPackets)):
+  for j in range(0, len(allPackets) - i - 1):
+    a = allPackets[j]
+    b = allPackets[j + 1]
+
+    evaluation = compareLists(a, b)
+    if evaluation == Evaluation.OutOfOrder:
+      allPackets[j + 1] = a
+      allPackets[j] = b
+
+# Because I'm lazy, we'll look for the divider packets iteratively
+packet2 = -1
+packet6 = -1
+for i in range(0, len(allPackets) - 1):
+  # Only look for [[2]] until we find it...
+  if packet2 < 0 and compareLists([[2]], allPackets[i]) == Evaluation.Continue:
+    packet2 = i + 1
+  # Only look for [[6]] after we find [[2]]
+  if packet2 >= 0 and packet6 < 0 and compareLists([[6]], allPackets[i]) == Evaluation.Continue:
+    packet6 = i + 1
+  # Don't bother going any further after we find both, duh
+  if packet2 >= 0 and packet6 >= 0:
+    break
+
+print("Part 2: " + str(packet2 * packet6))
