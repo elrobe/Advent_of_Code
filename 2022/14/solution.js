@@ -16,10 +16,11 @@
 // - You'll see the main page where you can then click the buttons to run the
 //   sample input or run using the main input.
 
-const TABLE_X_MIN = 400;
-const TABLE_X_MAX = 600;
-const TABLE_Y_MIN = 0;
-const TABLE_Y_MAX = 200;
+const TABLE_Y_MIN = 0; // Safe assumption that 0 is the absolute Y-min
+
+let TABLE_X_MIN = Number.MAX_SAFE_INTEGER;
+let TABLE_X_MAX = Number.MIN_SAFE_INTEGER;
+let TABLE_Y_MAX = Number.MIN_SAFE_INTEGER;
 
 let GRAINS = 0;
 
@@ -137,6 +138,7 @@ const moveGrain = () => {
   // Else, the grain is stuck and we can move onto the next grain
   if (!moved) { // Grain has nowhere to go
     currentGrain.attr("data-id", "");
+    currentGrain.attr("data-type", "grain");
   }
   return true; // I.e. keep running this function
 }
@@ -172,6 +174,7 @@ const createLine = (x1, y1, x2, y2) => {
     for (let y = s; y <= e; y++) {
       const id = "#x" + x1 + "y" + y;
       $(id).text("#");
+      $(id).attr("data-type", "wall");
     }
   } else { // Else X line
     s = x1
@@ -182,14 +185,15 @@ const createLine = (x1, y1, x2, y2) => {
     }
     for (let x = s; x <= e; x++) {
       const id = "#x" + x + "y" + y1;
-      console.log($(id))
       $(id).text("#");
+      $(id).attr("data-type", "wall");
     }
   }
 }
 
 // We'll actually construct the lines in the table now
 const parseLines = (lines) => {
+  const lineAry = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const positions = line.split(" -> ");
@@ -203,16 +207,29 @@ const parseLines = (lines) => {
       const y1 = parseInt(start[1]);
       const x2 = parseInt(end[0]);
       const y2 = parseInt(end[1]);
-      console.log(x1 + "," + y1 + " to " + x2 + "," + y2);
-      createLine(x1, y1, x2, y2);
+      lineAry.push([x1, y1, x2, y2]);
+
+      // Set the bounds of our grid
+      TABLE_X_MIN = Math.min(x1, x2, TABLE_X_MIN);
+      TABLE_X_MAX = Math.max(x1, x2, TABLE_X_MAX);
+      TABLE_Y_MAX = Math.max(y1, y2, TABLE_Y_MAX);
     }
+  }
+
+  // Add one to the bounds
+  TABLE_X_MIN = TABLE_X_MIN - 1;
+  TABLE_X_MAX = TABLE_X_MAX + 2;
+  TABLE_Y_MAX = TABLE_Y_MAX + 2;
+  initTable();
+
+  // Now go through and create the grid
+  for (let l = 0; l < lineAry.length; l++) {
+    const coords = lineAry[l];
+    createLine(coords[0], coords[1], coords[2], coords[3]);
   }
 }
 
 const displayInputData = (text) => {
-  // TODO: Init the table with 1+ the low and high x and y values
-  initTable();
-
   const lines = text.split("\n");
   parseLines(lines);
 }
