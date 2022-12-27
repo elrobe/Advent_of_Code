@@ -26,3 +26,4 @@ Each solution file contains two main parts:
 11. [Monkey in the Middle](./2022/11/) - Java
 12. [Hill Climbing Algorithm](./2022/12/) - Go
 13. [Distress Signal](./2022/13/) - Python
+14. [Regolith Reservoir](./2022/14/) - Node.js

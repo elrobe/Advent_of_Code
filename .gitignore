@@ -8,3 +8,6 @@
 
 # C output
 *.out
+
+# Node.js files
+node_modules/

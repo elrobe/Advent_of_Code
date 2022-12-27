@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <script src="./solution.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        max-height: 98%; /* Give some space at the bottom */
+      }
+
+      h2 {
+        margin: 0;
+        margin-bottom: 5px;
+      }
+
+      #caveContainer {
+        margin-top: 5px;
+        overflow: scroll;
+      }
+
+      #cave {
+        border-collapse: collapse;
+        border: 1px solid black;
+        font-size: 8;
+        width: 100%;
+        max-width: 100%;
+        table-layout: fixed;
+      }
+
+      #cave td {
+        padding: 0;
+        text-align: center;
+      }
+
+      /* The start square */
+      #x500y0 {
+        background-color: lightgreen;
+      }
+
+      .controls {
+        display: flex;
+        width: 100%;
+      }
+
+      .controlSet {
+        border: 2px solid black;
+        padding: 5px;
+        margin-right: 10px;
+      }
+
+      #counter {
+        border: 1px dotted gray;
+        padding: 0 10 2 10;
+        display: inline;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Advent of Code - 2022 Day 14</h2>
+    <div class="controls">
+      <div class="controlSet">
+        <span>Load</span>
+        <button id="load1" onclick="load('sample_input.txt')">Load Sample Input</button>
+        <button id="load2" onclick="load('input.txt')">Load Main Input</button>
+      </div>
+      <div id="run" class="controlSet">
+        <span>Run</span>
+        <button id="run1" disabled onclick="start(false)">Animate</button>
+        <button id="run2" disabled onclick="start(true)">Skip to Solution</button>
+      </div>
+      <div class="controlSet">
+        <span>Grains of Sand</span>
+        <div id="counter">0</div>
+      </div>
+      <div class="controlSet">
+        <button onclick="reset()">Reset</button>
+      </div>
+    </div>
+    <div id="caveContainer">
+      <table id="cave"></table>
+    </div>
+  </body>
+</html>
