@@ -25,6 +25,9 @@
 # After sorting all of the packets using the rules from part 1, what is
 # the product of the indices of the two sorted divider packets?
 
+# To run:
+# - python3 solution.py
+
 from enum import Enum
 
 INPUT_FILE = "input.txt"

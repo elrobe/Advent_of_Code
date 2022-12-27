@@ -22,6 +22,9 @@
 # 6 points for a win
 # 3 points for a draw
 
+# To run:
+# - python3 solution.py
+
 def readInput():
     input = open("input.txt", "r")
     commands = input.read().split("\n")
