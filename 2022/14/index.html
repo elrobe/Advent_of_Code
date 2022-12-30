@@ -61,6 +61,11 @@
         background-color: gray;
       }
 
+      td[data-type=floor] {
+        color: white;
+        background-color: black;
+      }
+
       td[data-type=grain] {
         background-color: darkkhaki;
       }
@@ -68,15 +73,24 @@
       td[data-id=grain] {
         background-color: green !important;
       }
+
+      button[data-type=picked] {
+        background-color: lightgreen;
+      }
     </style>
   </head>
   <body>
     <h2>Advent of Code - 2022 Day 14</h2>
     <div class="controls">
       <div class="controlSet">
+        <span>Part</span>
+        <button id="pick1" onclick="pick(true)">1</button>
+        <button id="pick2" onclick="pick(false)">2</button>
+      </div>
+      <div class="controlSet">
         <span>Load</span>
-        <button id="load1" onclick="load('sample_input.txt')">Load Sample Input</button>
-        <button id="load2" onclick="load('input.txt')">Load Main Input</button>
+        <button id="load1" disabled onclick="load('sample_input.txt')">Load Sample Input</button>
+        <button id="load2" disabled onclick="load('input.txt')">Load Main Input</button>
       </div>
       <div id="run" class="controlSet">
         <span>Run</span>

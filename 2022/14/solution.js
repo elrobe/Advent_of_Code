@@ -8,6 +8,12 @@
 // Part 1 -
 // Using the input walls, what is the total number of grains of sand that will come to rest
 // before subsequent falling grains fall into the infinite void?
+//
+// Part 2 -
+// Now consider that 2 Y-positions below the lowest input is actually the floor of the cave
+// and that the floor goes infinitely on the X-axis. Now we want to stand far enough
+// away from the (500, 0) source of the sand until enough grains fall to plug it.
+// How many grains of sand will come to rest until no more sand can come through the origin?
 
 // To run:
 // - Make sure you have node installed and run 'npm install' from the /14 directory
@@ -22,7 +28,31 @@ let TABLE_X_MIN = Number.MAX_SAFE_INTEGER;
 let TABLE_X_MAX = Number.MIN_SAFE_INTEGER;
 let TABLE_Y_MAX = Number.MIN_SAFE_INTEGER;
 
+let TIMER;
 let GRAINS = 0;
+
+let PART_ONE = false;
+let currentCoord = []; // A (y, x) tuple of the current grain position
+let caveAry = []; // A backing 2D array of fields since it gets REAL slow querying everything
+
+/***************
+ * UI Functions
+ ***************/
+
+// Sets the "part" we want to run (i.e. Part 1 or Part 2)
+const pick = (partOne) => {
+  PART_ONE = partOne;
+  if (partOne) {
+    $("#pick1").attr("data-type", "picked");
+  } else {
+    $("#pick2").attr("data-type", "picked");
+  }
+
+  $("#pick1").prop("disabled", true);
+  $("#pick2").prop("disabled", true);
+  $("#load1").prop("disabled", false);
+  $("#load2").prop("disabled", false);
+}
 
 // Helper function to load a specific file from the front-end
 const load = (file) => {
@@ -46,15 +76,39 @@ const start = (fastMode) => {
 
 // Resets the state of the application
 const reset = () => {
-  $("#load1").prop("disabled", false);
-  $("#load2").prop("disabled", false);
+  clearTimeout(TIMER);
+
+  // Clean up UI
+  $("#pick1").prop("disabled", false);
+  $("#pick1").attr("data-type", "");
+  $("#pick2").prop("disabled", false);
+  $("#pick2").attr("data-type", "");
+  $("#load1").prop("disabled", true);
+  $("#load2").prop("disabled", true);
   $("#run1").prop("disabled", true);
   $("#run2").prop("disabled", true);
   
-  GRAINS = 0;
   $("#counter").text("0");
 
   $("#cave").empty();
+
+  resetGlobals();
+}
+
+/*******************
+ * Helper Functions
+ *******************/
+
+// Helper function to reset the "global" variable values upon "Reset" press
+const resetGlobals = () => {
+  TABLE_X_MIN = Number.MAX_SAFE_INTEGER;
+  TABLE_X_MAX = Number.MIN_SAFE_INTEGER;
+  TABLE_Y_MAX = Number.MIN_SAFE_INTEGER;
+  TIMER = null;
+  GRAINS = 0;
+  PART_ONE = false;
+  currentCoord = [];
+  caveAry = [];
 }
 
 // Fast mode runs up to the ending before displaying the final output.
@@ -63,7 +117,7 @@ const moveGrains = (fastMode) => {
   if (!fastMode) {
     const moved = moveGrain();
     if (moved) {
-      setTimeout(() => moveGrains(false), 0); // Trigger the next!
+      TIMER = setTimeout(() => moveGrains(false), 0); // Trigger the next!
     }
   } else {
     while (moveGrain()) {}
@@ -73,16 +127,19 @@ const moveGrains = (fastMode) => {
 // Moves the current falling grain one step or initiates
 // the next grain to start falling.
 const moveGrain = () => {
-  let currentGrain = $("[data-id^='grain']");
+  let currentGrain;
 
   // Initiate the next grain.
-  if (currentGrain.length == 0) {
+  if (currentCoord.length == 0) {
     GRAINS++;
     $("#counter").text(GRAINS);
     const origin = $("#x500y0");
     origin.text("o");
     origin.attr("data-id", "grain");
     currentGrain = origin;
+    currentCoord = [0, 500-TABLE_X_MIN];
+  } else {
+    currentGrain = caveAry[currentCoord[0]][currentCoord[1]];
   }
   
   // Now move the grain
@@ -96,7 +153,7 @@ const moveGrain = () => {
     GRAINS--;
     $("#counter").text(GRAINS);
     currentGrain.attr("data-id", "");
-    alert(GRAINS + " have come to rest!"); // <------ FINAL OUTPUT
+    alert(GRAINS + " have come to rest!"); // <------ FINAL OUTPUT (Part 1)
     return false; // This will stop running altogether
   }
 
@@ -110,6 +167,7 @@ const moveGrain = () => {
     currentGrain.attr("data-id", "");
     nextPosition.text("o");
     nextPosition.attr("data-id", "grain");
+    currentCoord = [y+1, x-TABLE_X_MIN]; // Minus the X-min to match back to the 0-offset array
     moved = true;
   } else if (next !== "-") { // We've run into a grain, so start stacking
     // First try going to the left
@@ -120,6 +178,7 @@ const moveGrain = () => {
       currentGrain.attr("data-id", "");
       nextPosition.text("o");
       nextPosition.attr("data-id", "grain");
+      currentCoord = [y+1, x-1-TABLE_X_MIN];
       moved = true;
     } else {
       // Then try going to the right
@@ -130,6 +189,7 @@ const moveGrain = () => {
         currentGrain.attr("data-id", "");
         nextPosition.text("o");
         nextPosition.attr("data-id", "grain");
+        currentCoord = [y+1, x+1-TABLE_X_MIN];
         moved = true;
       }
     }
@@ -139,6 +199,14 @@ const moveGrain = () => {
   if (!moved) { // Grain has nowhere to go
     currentGrain.attr("data-id", "");
     currentGrain.attr("data-type", "grain");
+    currentCoord = []; // Clear it for the next run
+
+    // If we didn't move and the current grain position is (500, 0), then we've hit the end
+    // of part two's simulation
+    if (!PART_ONE && currentGrain.attr("id") === "x500y0") {
+      alert(GRAINS + " have come to rest!"); // <------ FINAL OUTPUT (Part 2)
+      return false; // This will stop running altogether
+    }
   }
   return true; // I.e. keep running this function
 }
@@ -157,6 +225,16 @@ const initTable = () => {
       row.append(cell);
     }
     cave.append(row);
+  }
+
+  // Now we'll go through and add all the jQuery elements to the backing 2D array
+  // for speedy access (at the cost of the table initialization taking a bit longer).
+  for (let y = TABLE_Y_MIN; y < TABLE_Y_MAX; y++) {
+    caveAry.push([]);
+    for (let x = TABLE_X_MIN; x < TABLE_X_MAX; x++) {
+      const elem = $("#x" + x + "y" + y);
+      caveAry[caveAry.length - 1].push(elem);
+    }
   }
 }
 
@@ -216,10 +294,13 @@ const parseLines = (lines) => {
     }
   }
 
-  // Add one to the bounds
-  TABLE_X_MIN = TABLE_X_MIN - 1;
-  TABLE_X_MAX = TABLE_X_MAX + 2;
-  TABLE_Y_MAX = TABLE_Y_MAX + 2;
+  // Add to the bounds for your viewing pleasure.
+  // Note that for part 2, since we have a worst case of a pyramid of sand piling up,
+  // the X-axis must be increased by the entire Y-height from the origin (to make an
+  // equilateral triangle).
+  TABLE_Y_MAX = TABLE_Y_MAX + (PART_ONE ? 2 : 3);
+  TABLE_X_MIN = (PART_ONE ? TABLE_X_MIN - 1 : 500 - TABLE_Y_MAX); // Highly unlikely that the Y-max will be greater than 500
+  TABLE_X_MAX = (PART_ONE ? TABLE_X_MAX + 2 : 500 + TABLE_Y_MAX);
   initTable();
 
   // Now go through and create the grid
@@ -227,8 +308,18 @@ const parseLines = (lines) => {
     const coords = lineAry[l];
     createLine(coords[0], coords[1], coords[2], coords[3]);
   }
+
+  // If part 2, draw the bottom row
+  if (!PART_ONE) {
+    for (let x = TABLE_X_MIN; x < TABLE_X_MAX; x++) {
+      const id = "#x" + x + "y" + (TABLE_Y_MAX - 1);
+      $(id).text("#");
+      $(id).attr("data-type", "floor");
+    }
+  }
 }
 
+// Helper to display the loaded data.
 const displayInputData = (text) => {
   const lines = text.split("\n");
   parseLines(lines);
