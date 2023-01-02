@@ -70,22 +70,25 @@
             (let [tuple (line-to-sensor line)]
               (conj acc (first tuple) (last tuple)))) (set []) lines))
 
-(defn get-max [key sensors]
-  (reduce
-   (fn [acc sensor] (if (< acc (key sensor)) 
-                      (key sensor)
-                      acc))
+(defn get-max-x
+  [sensors]
+  (reduce 
+   (fn [acc sensor]
+     (let [x-d (+ (:x sensor) (:d sensor))]
+       (if (< acc x-d) 
+         x-d
+         acc)))
    0 sensors))
 
 (defn get-min-x
-  "Same as get-max, but should only be used for :x since
-   the min distance will always be positive."
-  [min sensors]
+  [sensors]
   (reduce
-   (fn [acc sensor] (if (> acc (:x sensor))
-                      (:x sensor)
-                      acc))
-   min sensors))
+   (fn [acc sensor]
+     (let [x-d (- (:x sensor) (:d sensor))]
+       (if (> acc x-d)
+         x-d
+         acc)))
+   0 sensors))
 
 (defn eval-current [x y sensors]
   (if (= 0 (count sensors))
@@ -131,12 +134,9 @@
         all     (parse data)
         sensors (filter #(= (:type %) :sensor) all)
         beacons (filter #(= (:type %) :beacon) all)
-        max-d   (get-max :d sensors)
-        max-x   (get-max :x sensors)
-        max-x-d (+ max-d max-x)
-        min-x   (get-min-x max-x sensors)
-        min-x-d (- min-x max-d)
         row     2000000
         ; Filter down the sensors to check against that are even within range of the row
-        sensors-within-d (filter #(<= (distance {:x (:x %) :y row} %) (:d %)) sensors)]
-    (do-part-1 row sensors-within-d beacons min-x-d max-x-d)))
+        sensors-within-d (filter #(<= (distance {:x (:x %) :y row} %) (:d %)) sensors)
+        max-x   (get-max-x sensors-within-d)
+        min-x   (get-min-x sensors-within-d)]
+    (do-part-1 row sensors-within-d beacons min-x max-x)))
