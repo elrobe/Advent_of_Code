@@ -27,3 +27,4 @@ Each solution file contains two main parts:
 12. [Hill Climbing Algorithm](./2022/12/) - Go
 13. [Distress Signal](./2022/13/) - Python
 14. [Regolith Reservoir](./2022/14/) - Node.js
+15. [Beacon Exclusion Zone](./2022/15/) - Clojure
