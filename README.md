@@ -11,6 +11,8 @@ Each solution file contains two main parts:
 - File reading and parsing
 - The solution to the problem at hand
 
+Also, note that some of the solutions also provide "sample_input.txt". This is the input provided by the problem statement for testing purposes.
+
 ### 2022
 
 1. [Calorie Counting](./2022/1/) - Clojure
