@@ -23,16 +23,20 @@
 // - Then use 'mono solution.exe' to run
 
 using System;
+using System.Threading;
 using System.Collections.Generic;
 
 // I.e. the Graph for the problem itself
 public class Cave {
+  public static int MaxFlow2 = 0;
+  public static Object LockObject = new Object();
+
   public Dictionary<string, Valve> Valves { get; private set; }
-  public List<string> ValueValves { get; private set; }
+  public static List<string> ValueValves { get; private set; }
 
   public Cave(string[] lines) {
     Valves = new Dictionary<string, Valve>();
-    ValueValves = new List<string>();
+    Cave.ValueValves = new List<string>();
 
     // Construct the cave from all the lines
     foreach (string line in lines) {
@@ -52,8 +56,22 @@ public class Cave {
       // We'll use this list later to construct a proper graph of how to
       // get between each value valve.
       if (flow > 0) {
-        ValueValves.Add(name);
+        Cave.ValueValves.Add(name);
       }
+    }
+  }
+
+  // Copy constructor to create a new Cave for multithreading!
+  public Cave(Cave toCopy) {
+    Valves = new Dictionary<string, Valve>();
+    foreach (Valve v in toCopy.Valves.Values) {
+      Valve newValve = new Valve(v.Name, v.FlowRate, null);
+      newValve.OtherValves = new Dictionary<string, NextValve>();
+      foreach (NextValve nv in v.OtherValves.Values) {
+        NextValve newNextValve = new NextValve(nv.Name, nv.Weight);
+        newValve.OtherValves.Add(nv.Name, newNextValve);
+      }
+      Valves.Add(v.Name, newValve);
     }
   }
 
@@ -150,7 +168,9 @@ public class Solution {
   // Helper code to reduce number of redundant lines
   private static void CheckMaxFlow2(int flow) {
     if (flow > Solution.MaxFlow2) {
-      Solution.MaxFlow2 = flow;
+      lock(Cave.LockObject) {
+        Solution.MaxFlow2 = flow;
+      }
     }
   }
 
@@ -357,6 +377,8 @@ public class Solution {
 
   // Basically the same as Part 1, but we have an elephant also opening valves
   public static void Part2(Cave cave) {
+    List<Thread> pathThreads = new List<Thread>();
+
     // Starting at AA, recurse through the list to find the max flow.
     Valve aa = GetValve("AA", cave);
     foreach (NextValve myValve in aa.OtherValves.Values) {
@@ -364,10 +386,21 @@ public class Solution {
       foreach (NextValve eleValve in aa.OtherValves.Values) {
         if (myValve.Name != eleValve.Name) { // Don't let the elephant open the same valve as me!
           //System.Console.WriteLine("Elephant: " + eleValve.Name + ":" + eleValve.Weight);
-          TryDoubleFlowSequence(cave, 26, myValve.Name, myValve.Weight, eleValve.Name, eleValve.Weight, 0);
+          Thread t = new Thread(new ThreadStart(() => 
+            Solution.TryDoubleFlowSequence(new Cave(cave), 26, myValve.Name, myValve.Weight, eleValve.Name, eleValve.Weight, 0)));
+          t.Start();
+          pathThreads.Add(t);
+          //TryDoubleFlowSequence(cave, 26, myValve.Name, myValve.Weight, eleValve.Name, eleValve.Weight, 0);
         }
       }
     }
+
+    System.Console.WriteLine(DateTime.Now);
+    System.Console.WriteLine(pathThreads.Count);
+    foreach (Thread t in pathThreads) {
+      t.Join();
+    }
+    System.Console.WriteLine(DateTime.Now);
 
     // Output it already!
     System.Console.WriteLine("Part 2: " + Solution.MaxFlow2);
@@ -381,14 +414,14 @@ public class Solution {
         // Construct the graph! We want each valve that has a flow value to contain
         // a reference to all the other valves and the minute-cost (weight) to get there.
         Valve v;
-        cave.ValueValves.Add("AA"); // Add the starting point (always has a rate of 0)
-        foreach (string vName in cave.ValueValves) {
+        Cave.ValueValves.Add("AA"); // Add the starting point (always has a rate of 0)
+        foreach (string vName in Cave.ValueValves) {
           v = null;
           cave.Valves.TryGetValue(vName, out v);
           SetShortestDistanceToOtherValueValves(v, cave);
           //System.Console.WriteLine(v.ValvesString());
         }
-        cave.ValueValves.RemoveAt(cave.ValueValves.Count - 1); // Remove "AA" in O(1)
+        Cave.ValueValves.RemoveAt(Cave.ValueValves.Count - 1); // Remove "AA" in O(1)
 
         Part1(cave);
         Part2(cave);
